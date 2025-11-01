@@ -212,7 +212,7 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
 
         if event_type == "message_start":
             # Send initial chunk
-            yield f"data: {json.dumps({
+            chunk_data = {
                 'id': chunk_id,
                 'object': 'chat.completion.chunk',
                 'created': int(time.time()),
@@ -222,7 +222,8 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
                     'delta': {'role': 'assistant', 'content': ''},
                     'finish_reason': None
                 }]
-            })}\n\n"
+            }
+            yield f"data: {json.dumps(chunk_data)}\n\n"
 
         elif event_type == "content_block_start":
             block = event.content_block
@@ -237,7 +238,7 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
                     }
                 }
 
-                yield f"data: {json.dumps({
+                chunk_data = {
                     'id': chunk_id,
                     'object': 'chat.completion.chunk',
                     'created': int(time.time()),
@@ -257,14 +258,15 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
                         },
                         'finish_reason': None
                     }]
-                })}\n\n"
+                }
+                yield f"data: {json.dumps(chunk_data)}\n\n"
 
         elif event_type == "content_block_delta":
             delta = event.delta
 
             if delta.type == "text_delta":
                 # Text content
-                yield f"data: {json.dumps({
+                chunk_data = {
                     'id': chunk_id,
                     'object': 'chat.completion.chunk',
                     'created': int(time.time()),
@@ -274,13 +276,14 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
                         'delta': {'content': delta.text},
                         'finish_reason': None
                     }]
-                })}\n\n"
+                }
+                yield f"data: {json.dumps(chunk_data)}\n\n"
 
             elif delta.type == "input_json_delta" and current_tool_call:
                 # Tool call arguments
                 current_tool_call['function']['arguments'] += delta.partial_json
 
-                yield f"data: {json.dumps({
+                chunk_data = {
                     'id': chunk_id,
                     'object': 'chat.completion.chunk',
                     'created': int(time.time()),
@@ -297,7 +300,8 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
                         },
                         'finish_reason': None
                     }]
-                })}\n\n"
+                }
+                yield f"data: {json.dumps(chunk_data)}\n\n"
 
         elif event_type == "content_block_stop":
             if current_tool_call:
@@ -310,7 +314,7 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
 
         elif event_type == "message_stop":
             # Final chunk with finish reason
-            yield f"data: {json.dumps({
+            chunk_data = {
                 'id': chunk_id,
                 'object': 'chat.completion.chunk',
                 'created': int(time.time()),
@@ -320,6 +324,7 @@ async def convert_streaming_response_anthropic_to_openai(response_stream, model:
                     'delta': {},
                     'finish_reason': 'stop'
                 }]
-            })}\n\n"
+            }
+            yield f"data: {json.dumps(chunk_data)}\n\n"
 
             yield "data: [DONE]\n\n"
