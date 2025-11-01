@@ -1103,6 +1103,12 @@ ANTHROPIC_API_BASE_URLS = PersistentConfig(
     "ANTHROPIC_API_BASE_URLS", "anthropic.api_base_urls", ANTHROPIC_API_BASE_URLS
 )
 
+ANTHROPIC_API_CONFIGS = PersistentConfig(
+    "ANTHROPIC_API_CONFIGS",
+    "anthropic.api_configs",
+    {},
+)
+
 
 ####################################
 # MODELS

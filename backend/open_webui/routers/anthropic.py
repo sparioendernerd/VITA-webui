@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from open_webui.models.users import UserModel
-from open_webui.utils.auth import get_verified_user
+from open_webui.utils.auth import get_verified_user, get_admin_user
 from open_webui.env import (
     SRC_LOG_LEVELS,
     AIOHTTP_CLIENT_TIMEOUT,
@@ -325,3 +325,66 @@ async def chat_completions(
     return await generate_anthropic_chat_completion(
         request, form_data, user
     )
+
+
+@router.get("/config")
+async def get_config(request: Request, user=Depends(get_admin_user)):
+    """Get Anthropic API configuration."""
+    return {
+        "ENABLE_ANTHROPIC_API": getattr(request.app.state.config, "ENABLE_ANTHROPIC_API", False),
+        "ANTHROPIC_API_BASE_URLS": getattr(request.app.state.config, "ANTHROPIC_API_BASE_URLS", []),
+        "ANTHROPIC_API_KEYS": getattr(request.app.state.config, "ANTHROPIC_API_KEYS", []),
+        "ANTHROPIC_API_CONFIGS": getattr(request.app.state.config, "ANTHROPIC_API_CONFIGS", {}),
+    }
+
+
+class AnthropicConfigForm(BaseModel):
+    ENABLE_ANTHROPIC_API: Optional[bool] = None
+    ANTHROPIC_API_BASE_URLS: List[str]
+    ANTHROPIC_API_KEYS: List[str]
+    ANTHROPIC_API_CONFIGS: dict
+
+
+@router.post("/config/update")
+async def update_config(
+    request: Request, form_data: AnthropicConfigForm, user=Depends(get_admin_user)
+):
+    """Update Anthropic API configuration."""
+    request.app.state.config.ENABLE_ANTHROPIC_API = form_data.ENABLE_ANTHROPIC_API
+    request.app.state.config.ANTHROPIC_API_BASE_URLS = form_data.ANTHROPIC_API_BASE_URLS
+    request.app.state.config.ANTHROPIC_API_KEYS = form_data.ANTHROPIC_API_KEYS
+
+    # Check if API KEYS length is same as API URLS length
+    if len(request.app.state.config.ANTHROPIC_API_KEYS) != len(
+        request.app.state.config.ANTHROPIC_API_BASE_URLS
+    ):
+        if len(request.app.state.config.ANTHROPIC_API_KEYS) > len(
+            request.app.state.config.ANTHROPIC_API_BASE_URLS
+        ):
+            request.app.state.config.ANTHROPIC_API_KEYS = (
+                request.app.state.config.ANTHROPIC_API_KEYS[
+                    : len(request.app.state.config.ANTHROPIC_API_BASE_URLS)
+                ]
+            )
+        else:
+            request.app.state.config.ANTHROPIC_API_KEYS += [""] * (
+                len(request.app.state.config.ANTHROPIC_API_BASE_URLS)
+                - len(request.app.state.config.ANTHROPIC_API_KEYS)
+            )
+
+    request.app.state.config.ANTHROPIC_API_CONFIGS = form_data.ANTHROPIC_API_CONFIGS
+
+    # Remove the API configs that are not in the API URLS
+    keys = list(map(str, range(len(request.app.state.config.ANTHROPIC_API_BASE_URLS))))
+    request.app.state.config.ANTHROPIC_API_CONFIGS = {
+        key: value
+        for key, value in request.app.state.config.ANTHROPIC_API_CONFIGS.items()
+        if key in keys
+    }
+
+    return {
+        "ENABLE_ANTHROPIC_API": request.app.state.config.ENABLE_ANTHROPIC_API,
+        "ANTHROPIC_API_BASE_URLS": request.app.state.config.ANTHROPIC_API_BASE_URLS,
+        "ANTHROPIC_API_KEYS": request.app.state.config.ANTHROPIC_API_KEYS,
+        "ANTHROPIC_API_CONFIGS": request.app.state.config.ANTHROPIC_API_CONFIGS,
+    }
