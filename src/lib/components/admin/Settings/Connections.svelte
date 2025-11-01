@@ -5,8 +5,7 @@
 	const dispatch = createEventDispatcher();
 
 	import { getOllamaConfig, updateOllamaConfig } from '$lib/apis/ollama';
-	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
-	import { getAnthropicConfig, updateAnthropicConfig } from '$lib/apis/anthropic';
+        import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
 	import { getModels as _getModels, getBackendConfig } from '$lib/apis';
 	import { getConnectionsConfig, setConnectionsConfig } from '$lib/apis/configs';
 
@@ -18,7 +17,6 @@
 	import Plus from '$lib/components/icons/Plus.svelte';
 
 	import OpenAIConnection from './Connections/OpenAIConnection.svelte';
-	import AnthropicConnection from './Connections/AnthropicConnection.svelte';
 	import AddConnectionModal from '$lib/components/AddConnectionModal.svelte';
 	import OllamaConnection from './Connections/OllamaConnection.svelte';
 
@@ -42,20 +40,14 @@
 	let OPENAI_API_BASE_URLS = [''];
 	let OPENAI_API_CONFIGS = {};
 
-	let ANTHROPIC_API_KEYS = [''];
-	let ANTHROPIC_API_BASE_URLS = [''];
-	let ANTHROPIC_API_CONFIGS = {};
+        let ENABLE_OPENAI_API: null | boolean = null;
+        let ENABLE_OLLAMA_API: null | boolean = null;
 
-	let ENABLE_OPENAI_API: null | boolean = null;
-	let ENABLE_OLLAMA_API: null | boolean = null;
-	let ENABLE_ANTHROPIC_API: null | boolean = null;
+        let connectionsConfig = null;
 
-	let connectionsConfig = null;
-
-	let pipelineUrls = {};
-	let showAddOpenAIConnectionModal = false;
-	let showAddOllamaConnectionModal = false;
-	let showAddAnthropicConnectionModal = false;
+        let pipelineUrls = {};
+        let showAddOpenAIConnectionModal = false;
+        let showAddOllamaConnectionModal = false;
 
 	const updateOpenAIHandler = async () => {
 		if (ENABLE_OPENAI_API !== null) {
@@ -114,44 +106,9 @@
 		}
 	};
 
-	const updateAnthropicHandler = async () => {
-		if (ENABLE_ANTHROPIC_API !== null) {
-			// Remove trailing slashes
-			ANTHROPIC_API_BASE_URLS = ANTHROPIC_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
-
-			// Check if API KEYS length is same than API URLS length
-			if (ANTHROPIC_API_KEYS.length !== ANTHROPIC_API_BASE_URLS.length) {
-				if (ANTHROPIC_API_KEYS.length > ANTHROPIC_API_BASE_URLS.length) {
-					ANTHROPIC_API_KEYS = ANTHROPIC_API_KEYS.slice(0, ANTHROPIC_API_BASE_URLS.length);
-				}
-
-				if (ANTHROPIC_API_KEYS.length < ANTHROPIC_API_BASE_URLS.length) {
-					const diff = ANTHROPIC_API_BASE_URLS.length - ANTHROPIC_API_KEYS.length;
-					for (let i = 0; i < diff; i++) {
-						ANTHROPIC_API_KEYS.push('');
-					}
-				}
-			}
-
-			const res = await updateAnthropicConfig(localStorage.token, {
-				ENABLE_ANTHROPIC_API: ENABLE_ANTHROPIC_API,
-				ANTHROPIC_API_BASE_URLS: ANTHROPIC_API_BASE_URLS,
-				ANTHROPIC_API_KEYS: ANTHROPIC_API_KEYS,
-				ANTHROPIC_API_CONFIGS: ANTHROPIC_API_CONFIGS
-			}).catch((error) => {
-				toast.error(`${error}`);
-			});
-
-			if (res) {
-				toast.success($i18n.t('Anthropic API settings updated'));
-				await models.set(await getModels());
-			}
-		}
-	};
-
-	const updateConnectionsHandler = async () => {
-		const res = await setConnectionsConfig(localStorage.token, connectionsConfig).catch((error) => {
-			toast.error(`${error}`);
+        const updateConnectionsHandler = async () => {
+                const res = await setConnectionsConfig(localStorage.token, connectionsConfig).catch((error) => {
+                        toast.error(`${error}`);
 		});
 
 		if (res) {
@@ -179,49 +136,32 @@
 		await updateOllamaHandler();
 	};
 
-	const addAnthropicConnectionHandler = async (connection) => {
-		ANTHROPIC_API_BASE_URLS = [...ANTHROPIC_API_BASE_URLS, connection.url];
-		ANTHROPIC_API_KEYS = [...ANTHROPIC_API_KEYS, connection.key];
-		ANTHROPIC_API_CONFIGS[ANTHROPIC_API_BASE_URLS.length - 1] = connection.config;
+        onMount(async () => {
+                if ($user?.role === 'admin') {
+                        let ollamaConfig = {};
+                        let openaiConfig = {};
 
-		await updateAnthropicHandler();
-	};
+                        await Promise.all([
+                                (async () => {
+                                        ollamaConfig = await getOllamaConfig(localStorage.token);
+                                })(),
+                                (async () => {
+                                        openaiConfig = await getOpenAIConfig(localStorage.token);
+                                })(),
+                                (async () => {
+                                        connectionsConfig = await getConnectionsConfig(localStorage.token);
+                                })()
+                        ]);
 
-	onMount(async () => {
-		if ($user?.role === 'admin') {
-			let ollamaConfig = {};
-			let openaiConfig = {};
-			let anthropicConfig = {};
+                        ENABLE_OPENAI_API = openaiConfig.ENABLE_OPENAI_API;
+                        ENABLE_OLLAMA_API = ollamaConfig.ENABLE_OLLAMA_API;
 
-			await Promise.all([
-				(async () => {
-					ollamaConfig = await getOllamaConfig(localStorage.token);
-				})(),
-				(async () => {
-					openaiConfig = await getOpenAIConfig(localStorage.token);
-				})(),
-				(async () => {
-					anthropicConfig = await getAnthropicConfig(localStorage.token);
-				})(),
-				(async () => {
-					connectionsConfig = await getConnectionsConfig(localStorage.token);
-				})()
-			]);
+                        OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
+                        OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
+                        OPENAI_API_CONFIGS = openaiConfig.OPENAI_API_CONFIGS;
 
-			ENABLE_OPENAI_API = openaiConfig.ENABLE_OPENAI_API;
-			ENABLE_OLLAMA_API = ollamaConfig.ENABLE_OLLAMA_API;
-			ENABLE_ANTHROPIC_API = anthropicConfig.ENABLE_ANTHROPIC_API;
-
-			OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
-			OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
-			OPENAI_API_CONFIGS = openaiConfig.OPENAI_API_CONFIGS;
-
-			ANTHROPIC_API_BASE_URLS = anthropicConfig.ANTHROPIC_API_BASE_URLS;
-			ANTHROPIC_API_KEYS = anthropicConfig.ANTHROPIC_API_KEYS;
-			ANTHROPIC_API_CONFIGS = anthropicConfig.ANTHROPIC_API_CONFIGS;
-
-			OLLAMA_BASE_URLS = ollamaConfig.OLLAMA_BASE_URLS;
-			OLLAMA_API_CONFIGS = ollamaConfig.OLLAMA_API_CONFIGS;
+                        OLLAMA_BASE_URLS = ollamaConfig.OLLAMA_BASE_URLS;
+                        OLLAMA_API_CONFIGS = ollamaConfig.OLLAMA_API_CONFIGS;
 
 			if (ENABLE_OPENAI_API) {
 				// get url and idx
@@ -244,23 +184,9 @@
 				});
 			}
 
-			if (ENABLE_ANTHROPIC_API) {
-				// get url and idx
-				for (const [idx, url] of ANTHROPIC_API_BASE_URLS.entries()) {
-					if (!ANTHROPIC_API_CONFIGS[idx]) {
-						// Legacy support, url as key
-						ANTHROPIC_API_CONFIGS[idx] = ANTHROPIC_API_CONFIGS[url] || {};
-					}
-				}
-
-				ANTHROPIC_API_BASE_URLS.forEach(async (url, idx) => {
-					ANTHROPIC_API_CONFIGS[idx] = ANTHROPIC_API_CONFIGS[idx] || {};
-				});
-			}
-
-			if (ENABLE_OLLAMA_API) {
-				for (const [idx, url] of OLLAMA_BASE_URLS.entries()) {
-					if (!OLLAMA_API_CONFIGS[idx]) {
+                        if (ENABLE_OLLAMA_API) {
+                                for (const [idx, url] of OLLAMA_BASE_URLS.entries()) {
+                                        if (!OLLAMA_API_CONFIGS[idx]) {
 						OLLAMA_API_CONFIGS[idx] = OLLAMA_API_CONFIGS[url] || {};
 					}
 				}
@@ -269,11 +195,10 @@
 	});
 
 	const submitHandler = async () => {
-		updateOpenAIHandler();
-		updateOllamaHandler();
-		updateAnthropicHandler();
+                updateOpenAIHandler();
+                updateOllamaHandler();
 
-		dispatch('save');
+                dispatch('save');
 
 		await config.set(await getBackendConfig());
 	};
@@ -290,14 +215,9 @@
 	onSubmit={addOllamaConnectionHandler}
 />
 
-<AddConnectionModal
-	bind:show={showAddAnthropicConnectionModal}
-	onSubmit={addAnthropicConnectionHandler}
-/>
-
 <form class="flex flex-col h-full justify-between text-sm" on:submit|preventDefault={submitHandler}>
-	<div class=" overflow-y-scroll scrollbar-hidden h-full">
-		{#if ENABLE_OPENAI_API !== null && ENABLE_OLLAMA_API !== null && ENABLE_ANTHROPIC_API !== null && connectionsConfig !== null}
+        <div class=" overflow-y-scroll scrollbar-hidden h-full">
+                {#if ENABLE_OPENAI_API !== null && ENABLE_OLLAMA_API !== null && connectionsConfig !== null}
 			<div class="mb-3.5">
 				<div class=" mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
@@ -441,69 +361,7 @@
 					{/if}
 				</div>
 
-				<div class=" my-2">
-					<div class="flex justify-between items-center text-sm mb-2">
-						<div class="  font-medium">{$i18n.t('Anthropic API')}</div>
-
-						<div class="mt-1">
-							<Switch
-								bind:state={ENABLE_ANTHROPIC_API}
-								on:change={async () => {
-									updateAnthropicHandler();
-								}}
-							/>
-						</div>
-					</div>
-
-					{#if ENABLE_ANTHROPIC_API}
-						<div class="">
-							<div class="flex justify-between items-center">
-								<div class="font-medium text-xs">{$i18n.t('Manage Anthropic API Connections')}</div>
-
-								<Tooltip content={$i18n.t(`Add Connection`)}>
-									<button
-										class="px-1"
-										on:click={() => {
-											showAddAnthropicConnectionModal = true;
-										}}
-										type="button"
-									>
-										<Plus />
-									</button>
-								</Tooltip>
-							</div>
-
-							<div class="flex flex-col gap-1.5 mt-1.5">
-								{#each ANTHROPIC_API_BASE_URLS as url, idx}
-									<AnthropicConnection
-										bind:url={ANTHROPIC_API_BASE_URLS[idx]}
-										bind:key={ANTHROPIC_API_KEYS[idx]}
-										bind:config={ANTHROPIC_API_CONFIGS[idx]}
-										onSubmit={() => {
-											updateAnthropicHandler();
-										}}
-										onDelete={() => {
-											ANTHROPIC_API_BASE_URLS = ANTHROPIC_API_BASE_URLS.filter(
-												(url, urlIdx) => idx !== urlIdx
-											);
-											ANTHROPIC_API_KEYS = ANTHROPIC_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
-
-											let newConfig = {};
-											ANTHROPIC_API_BASE_URLS.forEach((url, newIdx) => {
-												newConfig[newIdx] =
-													ANTHROPIC_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
-											});
-											ANTHROPIC_API_CONFIGS = newConfig;
-											updateAnthropicHandler();
-										}}
-									/>
-								{/each}
-							</div>
-						</div>
-					{/if}
-				</div>
-
-				<div class="my-2">
+                                <div class="my-2">
 					<div class="flex justify-between items-center text-sm">
 						<div class="  font-medium">{$i18n.t('Direct Connections')}</div>
 

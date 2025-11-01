@@ -118,7 +118,7 @@
 				<span>VITA - Vailen Industries Thematic AI</span>
 			</div>
 			<div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-				<div>Coffee-themed AI platform with native Claude support</div>
+                            <div>Coffee-themed AI platform with MCP integration</div>
 				<div class="flex space-x-2">
 					<a href="https://github.com/sparioendernerd/VITA-webui" target="_blank" class="underline">
 						GitHub Repository
