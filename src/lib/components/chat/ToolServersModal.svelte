@@ -45,27 +45,82 @@
 			<div class="px-5 pb-3 w-full flex flex-col justify-center">
 				<div class=" text-sm dark:text-gray-300 mb-1">
 					{#each selectedTools as tool}
-						<Collapsible buttonClassName="w-full mb-0.5">
-							<div class="truncate">
-								<div class="text-sm font-medium dark:text-gray-100 text-gray-800 truncate">
-									{tool?.name}
-								</div>
+                                                <Collapsible buttonClassName="w-full mb-0.5">
+                                                        <div class="truncate">
+                                                                <div class="text-sm font-medium dark:text-gray-100 text-gray-800 truncate">
+                                                                        {tool?.name}
+                                                                </div>
 
-								{#if tool?.meta?.description}
-									<div class="text-xs text-gray-500">
-										{tool?.meta?.description}
-									</div>
-								{/if}
-							</div>
+                                                                {#if tool?.meta?.description}
+                                                                        <div class="text-xs text-gray-500">
+                                                                                {tool?.meta?.description}
+                                                                        </div>
+                                                                {/if}
+                                                        </div>
+                                                        {#if Object.keys(tool?.meta?.capabilities ?? {}).length > 0}
+                                                                <svelte:fragment slot="content">
+                                                                        <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
+                                                                                {#if (tool.meta.capabilities.tools ?? []).length > 0}
+                                                                                        <div>
+                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
+                                                                                                        {$i18n.t('Tools')}
+                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
+                                                                                                                ({tool.meta.capabilities.tools.length})
+                                                                                                        </span>
+                                                                                                </div>
+                                                                                                <ul class="mt-1 space-y-0.5">
+                                                                                                        {#each tool.meta.capabilities.tools.slice(0, 5) as capabilityTool}
+                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
+                                                                                                                        {capabilityTool?.name}
+                                                                                                                </li>
+                                                                                                        {/each}
+                                                                                                </ul>
+                                                                                        </div>
+                                                                                {/if}
 
-							<!-- <div slot="content">
-							{JSON.stringify(tool, null, 2)}
-						</div> -->
-						</Collapsible>
-					{/each}
-				</div>
-			</div>
-		{/if}
+                                                                                {#if (tool.meta.capabilities.prompts ?? []).length > 0}
+                                                                                        <div>
+                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
+                                                                                                        {$i18n.t('Prompts')}
+                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
+                                                                                                                ({tool.meta.capabilities.prompts.length})
+                                                                                                        </span>
+                                                                                                </div>
+                                                                                                <ul class="mt-1 space-y-0.5">
+                                                                                                        {#each tool.meta.capabilities.prompts.slice(0, 5) as prompt}
+                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
+                                                                                                                        {prompt?.name}
+                                                                                                                </li>
+                                                                                                        {/each}
+                                                                                                </ul>
+                                                                                        </div>
+                                                                                {/if}
+
+                                                                                {#if (tool.meta.capabilities.resources ?? []).length > 0}
+                                                                                        <div>
+                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
+                                                                                                        {$i18n.t('Resources')}
+                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
+                                                                                                                ({tool.meta.capabilities.resources.length})
+                                                                                                        </span>
+                                                                                                </div>
+                                                                                                <ul class="mt-1 space-y-0.5">
+                                                                                                        {#each tool.meta.capabilities.resources.slice(0, 5) as resource}
+                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
+                                                                                                                        {resource?.name ?? resource?.uri}
+                                                                                                                </li>
+                                                                                                        {/each}
+                                                                                                </ul>
+                                                                                        </div>
+                                                                                {/if}
+                                                                        </div>
+                                                                </svelte:fragment>
+                                                        {/if}
+                                                </Collapsible>
+                                        {/each}
+                                </div>
+                        </div>
+                {/if}
 
 		{#if $toolServers.length > 0}
 			<div class=" flex justify-between dark:text-gray-300 px-5 pb-0.5">

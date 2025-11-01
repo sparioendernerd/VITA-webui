@@ -105,28 +105,38 @@
 	export let selectedToolIds = [];
 	export let selectedFilterIds = [];
 
-	export let imageGenerationEnabled = false;
-	export let webSearchEnabled = false;
-	export let codeInterpreterEnabled = false;
+        export let imageGenerationEnabled = false;
+        export let webSearchEnabled = false;
+        export let codeInterpreterEnabled = false;
+        export let agentModeEnabled = false;
 
 	let showInputVariablesModal = false;
 	let inputVariablesModalCallback = (variableValues) => {};
 	let inputVariables = {};
 	let inputVariableValues = {};
 
-	let showValvesModal = false;
+        let showValvesModal = false;
 	let selectedValvesType = 'tool'; // 'tool' or 'function'
 	let selectedValvesItemId = null;
 	let integrationsMenuCloseOnOutsideClick = true;
 
-	$: if (!showValvesModal) {
-		integrationsMenuCloseOnOutsideClick = true;
-	}
+        $: if (!showValvesModal) {
+                integrationsMenuCloseOnOutsideClick = true;
+        }
 
-	$: onChange({
-		prompt,
-		files: files
-			.filter((file) => file.type !== 'image')
+        $: agentModeAvailable = (selectedToolIds ?? []).some((toolId) => {
+                const tool = ($tools ?? []).find((tool) => tool.id === toolId);
+                return tool?.meta?.agent?.supports_agent ?? false;
+        });
+
+        $: if (!agentModeAvailable && agentModeEnabled) {
+                agentModeEnabled = false;
+        }
+
+        $: onChange({
+                prompt,
+                files: files
+                        .filter((file) => file.type !== 'image')
 			.map((file) => {
 				return {
 					...file,
@@ -135,11 +145,12 @@
 				};
 			}),
 		selectedToolIds,
-		selectedFilterIds,
-		imageGenerationEnabled,
-		webSearchEnabled,
-		codeInterpreterEnabled
-	});
+                selectedFilterIds,
+                imageGenerationEnabled,
+                webSearchEnabled,
+                codeInterpreterEnabled,
+                agentModeEnabled
+        });
 
 	const inputVariableHandler = async (text: string): Promise<string> => {
 		inputVariables = extractInputVariables(text);
@@ -1612,31 +1623,64 @@
 												</Tooltip>
 											{/if}
 
-											{#if codeInterpreterEnabled}
-												<Tooltip content={$i18n.t('Code Interpreter')} placement="top">
-													<button
-														aria-label={codeInterpreterEnabled
-															? $i18n.t('Disable Code Interpreter')
-															: $i18n.t('Enable Code Interpreter')}
-														aria-pressed={codeInterpreterEnabled}
-														on:click|preventDefault={() =>
-															(codeInterpreterEnabled = !codeInterpreterEnabled)}
-														type="button"
-														class=" group p-[7px] flex gap-1.5 items-center text-sm transition-colors duration-300 max-w-full overflow-hidden {codeInterpreterEnabled
-															? ' text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-700/10 border border-sky-200/40 dark:border-sky-500/20'
-															: 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 '} {($settings?.highContrastMode ??
-														false)
-															? 'm-1'
-															: 'focus:outline-hidden rounded-full'}"
-													>
-														<Terminal className="size-3.5" strokeWidth="2" />
+                                                                                        {#if codeInterpreterEnabled}
+                                                                                                <Tooltip content={$i18n.t('Code Interpreter')} placement="top">
+                                                                                                        <button
+                                                                                                                aria-label={codeInterpreterEnabled
+                                                                                                                        ? $i18n.t('Disable Code Interpreter')
+                                                                                                                        : $i18n.t('Enable Code Interpreter')}
+                                                                                                                aria-pressed={codeInterpreterEnabled}
+                                                                                                                on:click|preventDefault={() =>
+                                                                                                                        (codeInterpreterEnabled = !codeInterpreterEnabled)}
+                                                                                                                type="button"
+                                                                                                                class=" group p-[7px] flex gap-1.5 items-center text-sm transition-colors duration-300 max-w-full overflow-hidden {codeInterpreterEnabled
+                                                                                                                        ? ' text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-700/10 border border-sky-200/40 dark:border-sky-500/20'
+                                                                                                                        : 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 '} {($settings?.highContrastMode ??
+                                                                                                                false)
+                                                                                                                        ? 'm-1'
+                                                                                                                        : 'focus:outline-hidden rounded-full'}"
+                                                                                                        >
+                                                                                                                <Terminal className="size-3.5" strokeWidth="2" />
 
-														<div class="hidden group-hover:block">
-															<XMark className="size-4" strokeWidth="1.75" />
-														</div>
-													</button>
-												</Tooltip>
-											{/if}
+                                                                                                                <div class="hidden group-hover:block">
+                                                                                                                        <XMark className="size-4" strokeWidth="1.75" />
+                                                                                                                </div>
+                                                                                                        </button>
+                                                                                                </Tooltip>
+                                                                                        {/if}
+
+                                                                                        <Tooltip
+                                                                                                content={
+                                                                                                        agentModeAvailable
+                                                                                                                ? $i18n.t('Enable multi-step agent execution')
+                                                                                                                : $i18n.t('Select an MCP tool to enable the agent')
+                                                                                                }
+                                                                                                placement="top"
+                                                                                        >
+                                                                                                <button
+                                                                                                        type="button"
+                                                                                                        class="group p-[7px] flex gap-1.5 items-center text-sm transition-colors duration-300 max-w-full overflow-hidden {agentModeEnabled
+                                                                                                                ? ' text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-700/10 border border-sky-200/40 dark:border-sky-500/20'
+                                                                                                                : agentModeAvailable
+                                                                                                                        ? 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                                                                                        : 'bg-transparent text-gray-400 dark:text-gray-600 cursor-not-allowed'} {($settings?.highContrastMode ?? false)
+                                                                                                                ? 'm-1'
+                                                                                                                : 'focus:outline-hidden rounded-full'}"
+                                                                                                        aria-label={$i18n.t('Agent Mode')}
+                                                                                                        aria-pressed={agentModeEnabled}
+                                                                                                        disabled={!agentModeAvailable}
+                                                                                                        on:click|preventDefault={() => {
+                                                                                                                if (agentModeAvailable) {
+                                                                                                                        agentModeEnabled = !agentModeEnabled;
+                                                                                                                }
+                                                                                                        }}
+                                                                                                >
+                                                                                                        <Sparkles className="size-4" strokeWidth="1.75" />
+                                                                                                        <div class="hidden group-hover:block">
+                                                                                                                <XMark className="size-4" strokeWidth="1.75" />
+                                                                                                        </div>
+                                                                                                </button>
+                                                                                        </Tooltip>
 										</div>
 									</div>
 
