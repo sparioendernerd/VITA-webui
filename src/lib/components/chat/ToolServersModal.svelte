@@ -58,64 +58,6 @@
                                                                 {/if}
                                                         </div>
                                                         {#if Object.keys(tool?.meta?.capabilities ?? {}).length > 0}
-
-                                                                <svelte:fragment slot="content">
-                                                                        <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
-                                                                                {#if (tool.meta.capabilities.tools ?? []).length > 0}
-                                                                                        <div>
-                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                                        {$i18n.t('Tools')}
-                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                                ({tool.meta.capabilities.tools.length})
-                                                                                                        </span>
-                                                                                                </div>
-                                                                                                <ul class="mt-1 space-y-0.5">
-                                                                                                        {#each tool.meta.capabilities.tools.slice(0, 5) as capabilityTool}
-                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                                        {capabilityTool?.name}
-                                                                                                                </li>
-                                                                                                        {/each}
-                                                                                                </ul>
-                                                                                        </div>
-                                                                                {/if}
-
-                                                                                {#if (tool.meta.capabilities.prompts ?? []).length > 0}
-                                                                                        <div>
-                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                                        {$i18n.t('Prompts')}
-                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                                ({tool.meta.capabilities.prompts.length})
-                                                                                                        </span>
-                                                                                                </div>
-                                                                                                <ul class="mt-1 space-y-0.5">
-                                                                                                        {#each tool.meta.capabilities.prompts.slice(0, 5) as prompt}
-                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                                        {prompt?.name}
-                                                                                                                </li>
-                                                                                                        {/each}
-                                                                                                </ul>
-                                                                                        </div>
-                                                                                {/if}
-
-                                                                                {#if (tool.meta.capabilities.resources ?? []).length > 0}
-                                                                                        <div>
-                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                                        {$i18n.t('Resources')}
-                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                                ({tool.meta.capabilities.resources.length})
-                                                                                                        </span>
-                                                                                                </div>
-                                                                                                <ul class="mt-1 space-y-0.5">
-                                                                                                        {#each tool.meta.capabilities.resources.slice(0, 5) as resource}
-                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                                        {resource?.name ?? resource?.uri}
-                                                                                                                </li>
-                                                                                                        {/each}
-                                                                                                </ul>
-                                                                                        </div>
-                                                                                {/if}
-                                                                        </div>
-                                                                </svelte:fragment>
                                                                 <div slot="content" class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
                                                                         {#if (tool.meta.capabilities.tools ?? []).length > 0}
                                                                                 <div>
