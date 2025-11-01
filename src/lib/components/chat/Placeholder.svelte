@@ -50,9 +50,10 @@
 
 	export let showCommands = false;
 
-	export let imageGenerationEnabled = false;
-	export let codeInterpreterEnabled = false;
-	export let webSearchEnabled = false;
+        export let imageGenerationEnabled = false;
+        export let codeInterpreterEnabled = false;
+        export let webSearchEnabled = false;
+        export let agentModeEnabled = false;
 
 	export let onSelect = (e) => {};
 	export let onChange = (e) => {};
@@ -201,22 +202,23 @@
 			{/if}
 
 			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
-				<MessageInput
-					bind:this={messageInput}
-					{history}
-					{selectedModels}
-					bind:files
-					bind:prompt
-					bind:autoScroll
-					bind:selectedToolIds
-					bind:selectedFilterIds
-					bind:imageGenerationEnabled
-					bind:codeInterpreterEnabled
-					bind:webSearchEnabled
-					bind:atSelectedModel
-					bind:showCommands
-					{toolServers}
-					{stopResponse}
+                                <MessageInput
+                                        bind:this={messageInput}
+                                        {history}
+                                        {selectedModels}
+                                        bind:files
+                                        bind:prompt
+                                        bind:autoScroll
+                                        bind:selectedToolIds
+                                        bind:selectedFilterIds
+                                        bind:imageGenerationEnabled
+                                        bind:codeInterpreterEnabled
+                                        bind:agentModeEnabled
+                                        bind:webSearchEnabled
+                                        bind:atSelectedModel
+                                        bind:showCommands
+                                        {toolServers}
+                                        {stopResponse}
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}
 					{onChange}

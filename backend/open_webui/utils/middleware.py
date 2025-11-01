@@ -1023,6 +1023,10 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     except Exception as e:
         log.error(f"Error getting OAuth token: {e}")
 
+    agent_payload = form_data.pop("agent", None)
+    if agent_payload:
+        metadata = {**metadata, "agent": agent_payload}
+
     extra_params = {
         "__event_emitter__": event_emitter,
         "__event_call__": event_call,
@@ -1323,6 +1327,8 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         if mcp_tools_dict:
             tools_dict = {**tools_dict, **mcp_tools_dict}
 
+    agent_settings = metadata.get("agent", {}) if isinstance(metadata, dict) else {}
+
     if direct_tool_servers:
         for tool_server in direct_tool_servers:
             tool_specs = tool_server.pop("specs", [])
@@ -1334,10 +1340,20 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                     "server": tool_server,
                 }
 
-    if mcp_clients:
+    if mcp_clients and not agent_settings.get("enabled"):
         metadata["mcp_clients"] = mcp_clients
 
-    if tools_dict:
+    if agent_settings.get("enabled"):
+        if mcp_clients:
+            metadata["mcp_clients"] = mcp_clients
+
+        metadata["agent_session"] = {
+            "enabled": True,
+            "tools": tools_dict,
+            "max_steps": agent_settings.get("max_steps", 8),
+            "catalog": agent_settings.get("tools", []),
+        }
+    elif tools_dict:
         if metadata.get("params", {}).get("function_calling") == "native":
             # If the function calling is native, then call the tools function calling handler
             metadata["tools"] = tools_dict

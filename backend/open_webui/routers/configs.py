@@ -266,9 +266,11 @@ async def verify_tool_servers_config(
 
                     await client.connect(form_data.url, headers=headers)
                     specs = await client.list_tool_specs()
+                    capabilities = await client.describe()
                     return {
                         "status": True,
                         "specs": specs,
+                        "capabilities": capabilities,
                     }
                 except Exception as e:
                     log.debug(f"Failed to create MCP client: {e}")

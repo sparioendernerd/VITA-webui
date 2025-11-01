@@ -470,7 +470,12 @@ from open_webui.utils.chat import (
     chat_action as chat_action_handler,
 )
 from open_webui.utils.embeddings import generate_embeddings
-from open_webui.utils.middleware import process_chat_payload, process_chat_response
+from open_webui.utils.middleware import (
+    process_chat_payload,
+    process_chat_response,
+    process_tool_result,
+)
+from open_webui.utils.agent import run_agent
 from open_webui.utils.access_control import has_access
 
 from open_webui.utils.auth import (
@@ -1535,7 +1540,19 @@ async def chat_completion(
                 request, form_data, user, metadata, model
             )
 
-            response = await chat_completion_handler(request, form_data, user)
+            agent_events: list[dict] = []
+            if metadata.get("agent_session", {}).get("enabled"):
+                agent_tools = metadata.get("agent_session", {}).get("tools", {})
+                response, agent_events = await run_agent(
+                    request,
+                    form_data,
+                    metadata,
+                    user,
+                    agent_tools,
+                    process_tool_result,
+                )
+            else:
+                response = await chat_completion_handler(request, form_data, user)
             if metadata.get("chat_id") and metadata.get("message_id"):
                 try:
                     if not metadata["chat_id"].startswith("local:"):
@@ -1550,7 +1567,14 @@ async def chat_completion(
                     pass
 
             return await process_chat_response(
-                request, response, form_data, user, metadata, model, events, tasks
+                request,
+                response,
+                form_data,
+                user,
+                metadata,
+                model,
+                [*events, *agent_events],
+                tasks,
             )
         except asyncio.CancelledError:
             log.info("Chat processing was cancelled")

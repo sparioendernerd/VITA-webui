@@ -56,6 +56,10 @@ class Tool(Base):
 class ToolMeta(BaseModel):
     description: Optional[str] = None
     manifest: Optional[dict] = {}
+    capabilities: Optional[dict] = None
+    agent: Optional[dict] = None
+
+    model_config = ConfigDict(extra="allow")
 
 
 class ToolModel(BaseModel):

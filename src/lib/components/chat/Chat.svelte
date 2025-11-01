@@ -126,9 +126,10 @@
 
 	let selectedToolIds = [];
 	let selectedFilterIds = [];
-	let imageGenerationEnabled = false;
-	let webSearchEnabled = false;
-	let codeInterpreterEnabled = false;
+        let imageGenerationEnabled = false;
+        let webSearchEnabled = false;
+        let codeInterpreterEnabled = false;
+        let agentModeEnabled = false;
 
 	let showCommands = false;
 
@@ -161,11 +162,13 @@
 		prompt = '';
 		messageInput?.setText('');
 
-		files = [];
-		selectedToolIds = [];
-		selectedFilterIds = [];
-		webSearchEnabled = false;
-		imageGenerationEnabled = false;
+                files = [];
+                selectedToolIds = [];
+                selectedFilterIds = [];
+                webSearchEnabled = false;
+                imageGenerationEnabled = false;
+                codeInterpreterEnabled = false;
+                agentModeEnabled = false;
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -186,12 +189,13 @@
 						messageInput?.setText(input.prompt);
 						files = input.files;
 						selectedToolIds = input.selectedToolIds;
-						selectedFilterIds = input.selectedFilterIds;
-						webSearchEnabled = input.webSearchEnabled;
-						imageGenerationEnabled = input.imageGenerationEnabled;
-						codeInterpreterEnabled = input.codeInterpreterEnabled;
-					}
-				} catch (e) {}
+                                                selectedFilterIds = input.selectedFilterIds;
+                                                webSearchEnabled = input.webSearchEnabled;
+                                                imageGenerationEnabled = input.imageGenerationEnabled;
+                                                codeInterpreterEnabled = input.codeInterpreterEnabled;
+                                                agentModeEnabled = input.agentModeEnabled ?? false;
+                                        }
+                                } catch (e) {}
 			}
 
 			const chatInput = document.getElementById('chat-input');
@@ -1745,12 +1749,16 @@
 			}
 		}
 
-		if ($settings?.memory ?? false) {
-			features = { ...features, memory: true };
-		}
+                if ($settings?.memory ?? false) {
+                        features = { ...features, memory: true };
+                }
 
-		return features;
-	};
+                if (agentModeEnabled) {
+                        features = { ...features, agent_mode: true };
+                }
+
+                return features;
+        };
 
 	const sendMessageSocket = async (model, _messages, _history, responseMessageId, _chatId) => {
 		const responseMessage = _history.messages[responseMessageId];
@@ -1842,11 +1850,11 @@
 			}))
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
 
-		const toolIds = [];
-		const toolServerIds = [];
+                const toolIds = [];
+                const toolServerIds = [];
 
-		for (const toolId of selectedToolIds) {
-			if (toolId.startsWith('direct_server:')) {
+                for (const toolId of selectedToolIds) {
+                        if (toolId.startsWith('direct_server:')) {
 				let serverId = toolId.replace('direct_server:', '');
 				// Check if serverId is a number
 				if (!isNaN(parseInt(serverId))) {
@@ -1855,14 +1863,31 @@
 					toolServerIds.push(serverId);
 				}
 			} else {
-				toolIds.push(toolId);
-			}
-		}
+                                toolIds.push(toolId);
+                        }
+                }
 
-		const res = await generateOpenAIChatCompletion(
-			localStorage.token,
-			{
-				stream: stream,
+                const agentTools = (selectedToolIds ?? [])
+                        .map((toolId) => ($tools ?? []).find((tool) => tool.id === toolId))
+                        .filter((tool) => tool?.meta?.agent?.supports_agent);
+
+                const agentPayload =
+                        agentModeEnabled && agentTools.length > 0
+                                ? {
+                                          enabled: true,
+                                          max_steps: 8,
+                                          tools: agentTools.map((tool) => ({
+                                                  id: tool.id,
+                                                  name: tool?.name,
+                                                  capabilities: tool?.meta?.capabilities ?? {}
+                                          }))
+                                  }
+                                : undefined;
+
+                const res = await generateOpenAIChatCompletion(
+                        localStorage.token,
+                        {
+                                stream: stream,
 				model: model.id,
 				messages: messages,
 				params: {
@@ -1880,13 +1905,14 @@
 
 				filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
 				tool_ids: toolIds.length > 0 ? toolIds : undefined,
-				tool_servers: ($toolServers ?? []).filter(
-					(server, idx) => toolServerIds.includes(idx) || toolServerIds.includes(server?.id)
-				),
-				features: getFeatures(),
-				variables: {
-					...getPromptVariables($user?.name, $settings?.userLocation ? userLocation : undefined)
-				},
+                                tool_servers: ($toolServers ?? []).filter(
+                                        (server, idx) => toolServerIds.includes(idx) || toolServerIds.includes(server?.id)
+                                ),
+                                features: getFeatures(),
+                                ...(agentPayload ? { agent: agentPayload } : {}),
+                                variables: {
+                                        ...getPromptVariables($user?.name, $settings?.userLocation ? userLocation : undefined)
+                                },
 				model_item: $models.find((m) => m.id === model.id),
 
 				session_id: $socket?.id,
@@ -2451,9 +2477,10 @@
 									bind:autoScroll
 									bind:selectedToolIds
 									bind:selectedFilterIds
-									bind:imageGenerationEnabled
-									bind:codeInterpreterEnabled
-									bind:webSearchEnabled
+                                                                        bind:imageGenerationEnabled
+                                                                        bind:codeInterpreterEnabled
+                                                                        bind:agentModeEnabled
+                                                                        bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
 									toolServers={$toolServers}
@@ -2503,9 +2530,10 @@
 									bind:autoScroll
 									bind:selectedToolIds
 									bind:selectedFilterIds
-									bind:imageGenerationEnabled
-									bind:codeInterpreterEnabled
-									bind:webSearchEnabled
+                                                                        bind:imageGenerationEnabled
+                                                                        bind:codeInterpreterEnabled
+                                                                        bind:agentModeEnabled
+                                                                        bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
 									toolServers={$toolServers}

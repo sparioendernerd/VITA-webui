@@ -111,6 +111,8 @@ async def get_tools(request: Request, user=Depends(get_verified_user)):
                     )
                 )
 
+            capabilities = server.get("info", {}).get("capabilities", {})
+
             tools.append(
                 ToolUserResponse(
                     **{
@@ -121,6 +123,10 @@ async def get_tools(request: Request, user=Depends(get_verified_user)):
                             "description": server.get("info", {}).get(
                                 "description", ""
                             ),
+                            "capabilities": capabilities,
+                            "agent": {
+                                "supports_agent": bool(capabilities.get("tools")),
+                            },
                         },
                         "access_control": server.get("config", {}).get(
                             "access_control", None
