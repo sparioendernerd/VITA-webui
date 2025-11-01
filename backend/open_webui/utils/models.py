@@ -75,7 +75,7 @@ async def get_all_base_models(request: Request, user: UserModel = None):
     )
     anthropic_task = (
         fetch_anthropic_models(request, user)
-        if request.app.state.config.ENABLE_ANTHROPIC_API
+        if getattr(request.app.state.config, 'ENABLE_ANTHROPIC_API', False)
         else asyncio.sleep(0, result=[])
     )
     function_task = get_function_models(request)

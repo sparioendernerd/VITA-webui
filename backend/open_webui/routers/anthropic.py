@@ -68,7 +68,7 @@ async def get_anthropic_models(request: Request, user: UserModel = None) -> dict
     Get list of available Anthropic models.
     Since Anthropic doesn't have a /models endpoint, we return a static list.
     """
-    if not request.app.state.config.ENABLE_ANTHROPIC_API:
+    if not getattr(request.app.state.config, 'ENABLE_ANTHROPIC_API', False):
         return {"data": []}
 
     # Add timestamps and return
@@ -109,7 +109,7 @@ async def generate_anthropic_chat_completion(
     Returns:
         StreamingResponse or dict with completion
     """
-    if not request.app.state.config.ENABLE_ANTHROPIC_API:
+    if not getattr(request.app.state.config, 'ENABLE_ANTHROPIC_API', False):
         raise HTTPException(status_code=400, detail="Anthropic API is not enabled")
 
     # Get API configuration
