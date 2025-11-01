@@ -1,6 +1,6 @@
 # VITA - Vailen Industries Thematic AI ☕
 
-**VITA (Vailen Industries Thematic AI)** is a powerful, coffee-inspired AI platform with native support for Claude, OpenAI, Ollama, and MCP (Model Context Protocol). Built on Open WebUI, VITA adds enhanced agentic capabilities and a warm, intuitive interface.
+**VITA (Vailen Industries Thematic AI)** is a powerful, coffee-inspired AI platform with first-class support for OpenAI, Ollama, and MCP (Model Context Protocol). Built on Open WebUI, VITA adds enhanced agentic capabilities and a warm, intuitive interface.
 
 ![VITA Demo](./demo.gif)
 
@@ -8,7 +8,7 @@
 
 VITA stands for **Vailen Industries Thematic AI** - a fork of Open WebUI enhanced with:
 - ☕ **Coffee-themed UI** - Warm, rich colors inspired by your favorite brew
-- 🤖 **Native Claude Support** - First-class integration with Anthropic's Claude models
+- 🤖 **Agentic Workflows** - Orchestrate complex tasks with iterative tool execution
 - 🔗 **MCP Integration** - Full Model Context Protocol support for agentic workflows
 - 🚀 **Enhanced Features** - Multi-step tool execution and advanced AI capabilities
 
@@ -16,19 +16,19 @@ VITA stands for **Vailen Industries Thematic AI** - a fork of Open WebUI enhance
 
 - ☕ **Coffee-Themed Interface**: A warm, inviting UI with rich coffee-inspired colors
 
-- 🤖 **Native Claude/Anthropic Support**: Direct integration with Claude models, no proxy needed
-  - Optimal tool calling with Anthropic's native format
+- 🤖 **OpenAI-Compatible Support**: Direct integration with OpenAI models and compatible APIs
+  - Optimized tool calling flows
   - Support for prompt caching and extended thinking
   - Streaming and non-streaming responses
 
 - 🔗 **MCP (Model Context Protocol) Integration**: Full support for agentic workflows
   - Multi-step tool execution
-  - Native integration with Claude's tool use
+  - Native integration with MCP tool use
   - Support for MCP resources and prompts
 
 - 🚀 **Effortless Setup**: Install seamlessly using Docker or Kubernetes (kubectl, kustomize or helm) for a hassle-free experience with support for both `:ollama` and `:cuda` tagged images.
 
-- 🤝 **Multi-Provider Support**: Effortlessly integrate OpenAI, Claude/Anthropic, Ollama, and OpenAI-compatible APIs. Customize API URLs to work with **LMStudio, GroqCloud, Mistral, OpenRouter, and more**.
+- 🤝 **Multi-Provider Support**: Effortlessly integrate OpenAI, Ollama, and OpenAI-compatible APIs. Customize API URLs to work with **LMStudio, GroqCloud, Mistral, OpenRouter, and more**.
 
 - 🛡️ **Granular Permissions and User Groups**: By allowing administrators to create detailed user roles and permissions, we ensure a secure user environment. This granularity not only enhances security but also allows for customized user experiences, fostering a sense of ownership and responsibility amongst users.
 
@@ -90,10 +90,6 @@ docker run -d -p 3000:8080 \
 Set your API keys via environment variables:
 
 ```bash
-# For Claude/Anthropic
-export ENABLE_ANTHROPIC_API=true
-export ANTHROPIC_API_KEY="sk-ant-..."
-
 # For OpenAI
 export ENABLE_OPENAI_API=true
 export OPENAI_API_KEY="sk-..."
@@ -104,14 +100,6 @@ export OLLAMA_API_BASE_URL="http://localhost:11434/api"
 ```
 
 ## VITA-Specific Features
-
-### Native Claude Support
-
-VITA includes native support for Anthropic's Claude models:
-- Direct API integration (no proxy needed)
-- Optimal tool calling performance
-- Support for all Claude 3 and 3.5 models
-- Streaming responses with proper SSE formatting
 
 ### MCP Integration
 
@@ -134,7 +122,7 @@ A warm, inviting color scheme inspired by coffee:
 VITA is built on the excellent [Open WebUI](https://github.com/open-webui/open-webui) project. We're grateful to the Open WebUI team and community for creating such a solid foundation.
 
 ### Changes from Open WebUI:
-- Native Anthropic/Claude API integration
+- Streamlined provider support (OpenAI + Ollama)
 - MCP (Model Context Protocol) support
 - Coffee-themed UI redesign
 - Enhanced agentic capabilities
@@ -159,7 +147,7 @@ npm run dev
 
 ## Contributing
 
-VITA is a personal fork focused on MCP integration and enhanced Claude support. If you'd like to contribute to the base project, please visit [Open WebUI](https://github.com/open-webui/open-webui).
+VITA is a personal fork focused on MCP integration and several personal customizations. If you'd like to contribute to the base project, please visit [Open WebUI](https://github.com/open-webui/open-webui).
 
 ## License
 
@@ -168,7 +156,6 @@ VITA inherits the MIT License from Open WebUI. See LICENSE file for details.
 ## Acknowledgments
 
 - **Open WebUI Team** - For the excellent foundation
-- **Anthropic** - For Claude and the MCP protocol
 - **Coffee** - For the inspiration ☕
 
 ---

@@ -50,7 +50,6 @@ dependencies = [
     "mcp==1.14.1",
 
     "openai",
-    "anthropic",
     "google-genai==1.38.0",
     "google-generativeai==0.8.5",
 
