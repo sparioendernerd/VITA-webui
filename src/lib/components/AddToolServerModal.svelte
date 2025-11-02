@@ -38,6 +38,7 @@
 
         let transport = 'http'; // 'http', 'command'
 
+
         const typeRotation = [
                 { type: 'openapi', transport: 'http' },
                 { type: 'mcp', transport: 'http' },
@@ -58,6 +59,8 @@
                 type = nextState.type;
                 transport = nextState.transport;
         };
+
+
 
         let url = '';
         let command = '';
@@ -468,6 +471,7 @@
 									<div class=" text-xs text-gray-500">{$i18n.t('Type')}</div>
 
 									<div class="">
+
                                                                                 <button
                                                                                         on:click={cycleType}
                                                                                         type="button"
@@ -477,15 +481,41 @@
                                                                                                 {$i18n.t('MCP')}
                                                                                                 <span class="text-gray-500">
                                                                                                         (
+
+										<button
+											on:click={() => {
+                                                                                                if (['', 'openapi'].includes(type)) {
+                                                                                                        type = 'mcp';
+                                                                                                        transport = 'http';
+                                                                                                } else if (transport === 'http') {
+                                                                                                        transport = 'command';
+                                                                                                } else {
+                                                                                                        type = 'openapi';
+                                                                                                        transport = 'http';
+                                                                                                }
+                                                                                        }}
+											type="button"
+											class=" text-xs text-gray-700 dark:text-gray-300"
+										>
+											{#if ['', 'openapi'].includes(type)}
+												{$i18n.t('OpenAPI')}
+                                                                                        {:else if type === 'mcp'}
+                                                                                                {$i18n.t('MCP')}
+                                                                                                <span class="text-gray-500">
+
                                                                                                         {#if transport === 'command'}
                                                                                                                 {$i18n.t('Command')}
                                                                                                         {:else}
                                                                                                                 {$i18n.t('Streamable HTTP')}
                                                                                                         {/if}
+
                                                                                                         )
                                                                                                 </span>
                                                                                         {:else}
                                                                                                 {$i18n.t('OpenAPI')}
+
+                                                                                                </span>
+
                                                                                         {/if}
                                                                                 </button>
                                                                         </div>
@@ -495,6 +525,10 @@
                                                 {#if type === 'mcp'}
                                                         <div class="flex gap-2 mb-1.5">
                                                                 <div class=" text-xs text-gray-500 self-center">{$i18n.t('Transport')}</div>
+
+
+                                                                <div class=" text-xs text-gray-500 self-center">{$i18n.t('Connection')}</div>
+
                                                                 <div class="flex gap-1">
                                                                         <button
                                                                                 class={`px-2 py-0.5 text-xs rounded-full border transition ${transport === 'http' ? 'bg-gray-200 dark:bg-gray-800 border-transparent text-gray-900 dark:text-gray-100' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
