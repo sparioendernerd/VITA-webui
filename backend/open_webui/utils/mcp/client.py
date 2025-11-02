@@ -1,9 +1,11 @@
 import asyncio
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import AsyncExitStack
+import shlex
 from typing import Any, Optional
 
 from mcp import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.client.session import _default_message_handler
 from mcp.types import ServerNotification
@@ -13,9 +15,17 @@ NotificationHandler = Callable[[ServerNotification], Awaitable[None]]
 
 
 class MCPClient:
-    def __init__(self, url: Optional[str] = None, headers: Optional[dict[str, str]] = None):
+    def __init__(
+        self,
+        url: Optional[str] = None,
+        headers: Optional[dict[str, str]] = None,
+        transport: str = "http",
+        stdio_server: Optional[StdioServerParameters] = None,
+    ):
         self.url = url
         self.headers = headers or {}
+        self.transport = transport
+        self._stdio_server = stdio_server
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
         self._connect_lock = asyncio.Lock()
@@ -33,24 +43,58 @@ class MCPClient:
         self,
         url: Optional[str] = None,
         headers: Optional[dict[str, str]] = None,
+        transport: Optional[str] = None,
+        command: Optional[str] = None,
     ) -> ClientSession:
-        if url is not None:
-            self.url = url
-        if headers is not None:
-            self.headers = headers
+        if transport is not None:
+            self.transport = transport
 
-        if not self.url:
-            raise RuntimeError("MCP client requires a URL before connecting.")
+        if self.transport == "command":
+            if command:
+                parts = shlex.split(command)
+            else:
+                parts = []
+
+            if parts:
+                base_command, *args = parts
+            else:
+                base_command = None
+                args = []
+
+            if base_command is None:
+                raise RuntimeError(
+                    "Command-based MCP client requires a non-empty command."
+                )
+
+            self._stdio_server = StdioServerParameters(
+                command=base_command,
+                args=args,
+            )
+        else:
+            if url is not None:
+                self.url = url
+            if headers is not None:
+                self.headers = headers
+
+            if not self.url:
+                raise RuntimeError("MCP client requires a URL before connecting.")
 
         async with self._connect_lock:
             if self.session is not None:
                 return self.session
 
             try:
-                self._streams_context = streamablehttp_client(
-                    self.url,
-                    headers=self.headers or None,
-                )
+                if self.transport == "command":
+                    if not self._stdio_server:
+                        raise RuntimeError(
+                            "Command-based MCP client requires stdio parameters."
+                        )
+                    self._streams_context = stdio_client(self._stdio_server)
+                else:
+                    self._streams_context = streamablehttp_client(
+                        self.url,
+                        headers=self.headers or None,
+                    )
 
                 transport = await self.exit_stack.enter_async_context(self._streams_context)
                 read_stream, write_stream, _ = transport

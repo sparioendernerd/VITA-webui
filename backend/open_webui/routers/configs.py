@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from pydantic import BaseModel, ConfigDict
 import aiohttp
 
-from typing import Optional
+from typing import Optional, Any
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.config import get_config, save_config
@@ -141,6 +141,8 @@ class ToolServerConnection(BaseModel):
     url: str
     path: str
     type: Optional[str] = "openapi"  # openapi, mcp
+    transport: Optional[str] = "http"  # http, command
+    command: Optional[str] = None
     auth_type: Optional[str]
     key: Optional[str]
     config: Optional[dict]
@@ -203,9 +205,19 @@ async def verify_tool_servers_config(
     """
     Verify the connection to the tool server.
     """
+    client: Optional[MCPClient] = None
+
     try:
         if form_data.type == "mcp":
-            if form_data.auth_type == "oauth_2.1":
+            transport = (form_data.transport or "http").lower()
+
+            if transport == "command" and form_data.auth_type == "oauth_2.1":
+                raise HTTPException(
+                    status_code=400,
+                    detail="OAuth 2.1 is not supported for command-based MCP servers.",
+                )
+
+            if transport == "http" and form_data.auth_type == "oauth_2.1":
                 discovery_urls = get_discovery_urls(form_data.url)
                 for discovery_url in discovery_urls:
                     log.debug(
@@ -264,7 +276,18 @@ async def verify_tool_servers_config(
                     if token:
                         headers = {"Authorization": f"Bearer {token}"}
 
-                    await client.connect(form_data.url, headers=headers)
+                    connect_kwargs: dict[str, Any] = {
+                        "transport": transport,
+                    }
+
+                    if transport == "http":
+                        connect_kwargs["url"] = form_data.url
+                        if headers:
+                            connect_kwargs["headers"] = headers
+                    else:
+                        connect_kwargs["command"] = form_data.command
+
+                    await client.connect(**connect_kwargs)
                     specs = await client.list_tool_specs()
                     capabilities = await client.describe()
                     return {
