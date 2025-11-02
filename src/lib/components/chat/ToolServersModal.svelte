@@ -67,84 +67,65 @@
                                                                 {/if}
                                                         </div>
 
-
-                                                        <div
-                                                                slot="content"
-                                                                class="text-xs text-gray-600 dark:text-gray-300 space-y-2"
-                                                                class:hidden={!hasCapabilities}
-                                                        >
-                                                                {#if capabilityTools.length > 0}
-                                                                        <div>
-                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                        {$i18n.t('Tools')}
-                                                                                        <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                ({capabilityTools.length})
-                                                                                        </span>
-=======
-                                                        {#if Object.keys(tool?.meta?.capabilities ?? {}).length > 0}
-                                                                <div slot="content" class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
-                                                                        {#if (tool.meta.capabilities.tools ?? []).length > 0}
-                                                                                <div>
-                                                                                        <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                                {$i18n.t('Tools')}
-                                                                                                <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                        ({tool.meta.capabilities.tools.length})
-                                                                                                </span>
+                                                        {#if hasCapabilities}
+                                                                <svelte:fragment slot="content">
+                                                                        <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
+                                                                                {#if capabilityTools.length > 0}
+                                                                                        <div>
+                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
+                                                                                                        {$i18n.t('Tools')}
+                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
+                                                                                                                ({capabilityTools.length})
+                                                                                                        </span>
+                                                                                                </div>
+                                                                                                <ul class="mt-1 space-y-0.5">
+                                                                                                        {#each capabilityTools.slice(0, 5) as capabilityTool}
+                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
+                                                                                                                        {capabilityTool?.name}
+                                                                                                                </li>
+                                                                                                        {/each}
+                                                                                                </ul>
                                                                                         </div>
-                                                                                        <ul class="mt-1 space-y-0.5">
-                                                                                                {#each tool.meta.capabilities.tools.slice(0, 5) as capabilityTool}
-                                                                                                        <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                                {capabilityTool?.name}
-                                                                                                        </li>
-                                                                                                {/each}
-                                                                                        </ul>
-                                                                                </div>
-                                                                                <ul class="mt-1 space-y-0.5">
-                                                                                        {#each capabilityTools.slice(0, 5) as capabilityTool}
-                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                        {capabilityTool?.name}
-                                                                                                </li>
-                                                                                        {/each}
-                                                                                </ul>
-                                                                        </div>
-                                                                {/if}
+                                                                                {/if}
 
-                                                                {#if capabilityPrompts.length > 0}
-                                                                        <div>
-                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                        {$i18n.t('Prompts')}
-                                                                                        <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                ({capabilityPrompts.length})
-                                                                                        </span>
-                                                                                </div>
-                                                                                <ul class="mt-1 space-y-0.5">
-                                                                                        {#each capabilityPrompts.slice(0, 5) as prompt}
-                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                        {prompt?.name}
-                                                                                                </li>
-                                                                                        {/each}
-                                                                                </ul>
-                                                                        </div>
-                                                                {/if}
+                                                                                {#if capabilityPrompts.length > 0}
+                                                                                        <div>
+                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
+                                                                                                        {$i18n.t('Prompts')}
+                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
+                                                                                                                ({capabilityPrompts.length})
+                                                                                                        </span>
+                                                                                                </div>
+                                                                                                <ul class="mt-1 space-y-0.5">
+                                                                                                        {#each capabilityPrompts.slice(0, 5) as prompt}
+                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
+                                                                                                                        {prompt?.name}
+                                                                                                                </li>
+                                                                                                        {/each}
+                                                                                                </ul>
+                                                                                        </div>
+                                                                                {/if}
 
-                                                                {#if capabilityResources.length > 0}
-                                                                        <div>
-                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
-                                                                                        {$i18n.t('Resources')}
-                                                                                        <span class="text-[10px] text-gray-400 ml-1">
-                                                                                                ({capabilityResources.length})
-                                                                                        </span>
-                                                                                </div>
-                                                                                <ul class="mt-1 space-y-0.5">
-                                                                                        {#each capabilityResources.slice(0, 5) as resource}
-                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
-                                                                                                        {resource?.name ?? resource?.uri}
-                                                                                                </li>
-                                                                                        {/each}
-                                                                                </ul>
+                                                                                {#if capabilityResources.length > 0}
+                                                                                        <div>
+                                                                                                <div class="font-semibold text-gray-700 dark:text-gray-200">
+                                                                                                        {$i18n.t('Resources')}
+                                                                                                        <span class="text-[10px] text-gray-400 ml-1">
+                                                                                                                ({capabilityResources.length})
+                                                                                                        </span>
+                                                                                                </div>
+                                                                                                <ul class="mt-1 space-y-0.5">
+                                                                                                        {#each capabilityResources.slice(0, 5) as resource}
+                                                                                                                <li class="truncate text-gray-500 dark:text-gray-300">
+                                                                                                                        {resource?.name ?? resource?.uri}
+                                                                                                                </li>
+                                                                                                        {/each}
+                                                                                                </ul>
+                                                                                        </div>
+                                                                                {/if}
                                                                         </div>
-                                                                {/if}
-                                                        </div>
+                                                                </svelte:fragment>
+                                                        {/if}
                                                 </Collapsible>
                                         {/each}
                                 </div>
