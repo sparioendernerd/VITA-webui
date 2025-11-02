@@ -449,8 +449,16 @@
 									<div class="">
 										<button
 											on:click={() => {
-												type = ['', 'openapi'].includes(type) ? 'mcp' : 'openapi';
-											}}
+                                                                                                if (['', 'openapi'].includes(type)) {
+                                                                                                        type = 'mcp';
+                                                                                                        transport = 'http';
+                                                                                                } else if (transport === 'http') {
+                                                                                                        transport = 'command';
+                                                                                                } else {
+                                                                                                        type = 'openapi';
+                                                                                                        transport = 'http';
+                                                                                                }
+                                                                                        }}
 											type="button"
 											class=" text-xs text-gray-700 dark:text-gray-300"
 										>
@@ -473,6 +481,8 @@
 
                                                 {#if type === 'mcp'}
                                                         <div class="flex gap-2 mb-1.5">
+                                                                <div class=" text-xs text-gray-500 self-center">{$i18n.t('Transport')}</div>
+
                                                                 <div class=" text-xs text-gray-500 self-center">{$i18n.t('Connection')}</div>
                                                                 <div class="flex gap-1">
                                                                         <button
