@@ -470,8 +470,7 @@
 								<div class="flex w-full justify-between items-center">
 									<div class=" text-xs text-gray-500">{$i18n.t('Type')}</div>
 
-									<div class="">
-
+                                                                        <div class="">
                                                                                 <button
                                                                                         on:click={cycleType}
                                                                                         type="button"
@@ -481,41 +480,15 @@
                                                                                                 {$i18n.t('MCP')}
                                                                                                 <span class="text-gray-500">
                                                                                                         (
-
-										<button
-											on:click={() => {
-                                                                                                if (['', 'openapi'].includes(type)) {
-                                                                                                        type = 'mcp';
-                                                                                                        transport = 'http';
-                                                                                                } else if (transport === 'http') {
-                                                                                                        transport = 'command';
-                                                                                                } else {
-                                                                                                        type = 'openapi';
-                                                                                                        transport = 'http';
-                                                                                                }
-                                                                                        }}
-											type="button"
-											class=" text-xs text-gray-700 dark:text-gray-300"
-										>
-											{#if ['', 'openapi'].includes(type)}
-												{$i18n.t('OpenAPI')}
-                                                                                        {:else if type === 'mcp'}
-                                                                                                {$i18n.t('MCP')}
-                                                                                                <span class="text-gray-500">
-
                                                                                                         {#if transport === 'command'}
                                                                                                                 {$i18n.t('Command')}
                                                                                                         {:else}
                                                                                                                 {$i18n.t('Streamable HTTP')}
                                                                                                         {/if}
-
                                                                                                         )
                                                                                                 </span>
                                                                                         {:else}
                                                                                                 {$i18n.t('OpenAPI')}
-
-                                                                                                </span>
-
                                                                                         {/if}
                                                                                 </button>
                                                                         </div>
