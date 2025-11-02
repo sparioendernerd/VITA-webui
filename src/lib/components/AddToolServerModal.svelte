@@ -34,9 +34,12 @@
 
 	let inputElement = null;
 
-	let type = 'openapi'; // 'openapi', 'mcp'
+        let type = 'openapi'; // 'openapi', 'mcp'
 
-	let url = '';
+        let transport = 'http'; // 'http', 'command'
+
+        let url = '';
+        let command = '';
 
 	let spec_type = 'url'; // 'url', 'json'
 	let spec = ''; // used when spec_type is 'json'
@@ -56,11 +59,16 @@
 	let enable = true;
 	let loading = false;
 
-	const registerOAuthClientHandler = async () => {
-		if (url === '') {
-			toast.error($i18n.t('Please enter a valid URL'));
-			return;
-		}
+        const registerOAuthClientHandler = async () => {
+                if (transport !== 'http') {
+                        toast.error($i18n.t('OAuth client registration requires an MCP HTTP server URL'));
+                        return;
+                }
+
+                if (url === '') {
+                        toast.error($i18n.t('Please enter a valid URL'));
+                        return;
+                }
 
 		if (id === '') {
 			toast.error($i18n.t('Please enter a valid ID'));
@@ -92,62 +100,71 @@
 		}
 	};
 
-	const verifyHandler = async () => {
-		if (url === '') {
-			toast.error($i18n.t('Please enter a valid URL'));
-			return;
-		}
+        const verifyHandler = async () => {
+                const trimmedCommand = command.trim();
 
-		if (['openapi', ''].includes(type)) {
-			if (spec_type === 'json' && spec === '') {
-				toast.error($i18n.t('Please enter a valid JSON spec'));
-				return;
-			}
+                if (type === 'mcp' && transport === 'command') {
+                        if (trimmedCommand === '') {
+                                toast.error($i18n.t('Please enter a valid command'));
+                                return;
+                        }
+                } else if (url === '') {
+                        toast.error($i18n.t('Please enter a valid URL'));
+                        return;
+                }
 
-			if (spec_type === 'url' && path === '') {
-				toast.error($i18n.t('Please enter a valid path'));
-				return;
-			}
-		}
+                if (['openapi', ''].includes(type)) {
+                        if (spec_type === 'json' && spec === '') {
+                                toast.error($i18n.t('Please enter a valid JSON spec'));
+                                return;
+                        }
 
-		if (direct) {
-			const res = await getToolServerData(
-				auth_type === 'bearer' ? key : localStorage.token,
-				path.includes('://') ? path : `${url}${path.startsWith('/') ? '' : '/'}${path}`
-			).catch((err) => {
-				toast.error($i18n.t('Connection failed'));
-			});
+                        if (spec_type === 'url' && path === '') {
+                                toast.error($i18n.t('Please enter a valid path'));
+                                return;
+                        }
+                }
 
-			if (res) {
-				toast.success($i18n.t('Connection successful'));
-				console.debug('Connection successful', res);
-			}
-		} else {
-			const res = await verifyToolServerConnection(localStorage.token, {
-				url,
-				path,
-				type,
-				auth_type,
-				key,
-				config: {
-					enable: enable,
-					access_control: accessControl
-				},
-				info: {
-					id,
-					name,
-					description
-				}
-			}).catch((err) => {
-				toast.error($i18n.t('Connection failed'));
-			});
+                if (direct && type !== 'mcp') {
+                        const res = await getToolServerData(
+                                auth_type === 'bearer' ? key : localStorage.token,
+                                path.includes('://') ? path : `${url}${path.startsWith('/') ? '' : '/'}${path}`
+                        ).catch((err) => {
+                                toast.error($i18n.t('Connection failed'));
+                        });
 
-			if (res) {
-				toast.success($i18n.t('Connection successful'));
-				console.debug('Connection successful', res);
-			}
-		}
-	};
+                        if (res) {
+                                toast.success($i18n.t('Connection successful'));
+                                console.debug('Connection successful', res);
+                        }
+                } else {
+                        const res = await verifyToolServerConnection(localStorage.token, {
+                                url: transport === 'http' ? url : '',
+                                path,
+                                type,
+                                transport,
+                                command: transport === 'command' ? trimmedCommand : undefined,
+                                auth_type,
+                                key,
+                                config: {
+                                        enable: enable,
+                                        access_control: accessControl
+                                },
+                                info: {
+                                        id,
+                                        name,
+                                        description
+                                }
+                        }).catch((err) => {
+                                toast.error($i18n.t('Connection failed'));
+                        });
+
+                        if (res) {
+                                toast.success($i18n.t('Connection successful'));
+                                console.debug('Connection successful', res);
+                        }
+                }
+        };
 
 	const importHandler = async (e) => {
 		const file = e.target.files[0];
@@ -169,15 +186,17 @@
 					data = data[0];
 				}
 
-				if (data.type) type = data.type;
-				if (data.url) url = data.url;
+                                type = data.type ?? 'openapi';
+                                transport = data.transport ?? 'http';
+                                url = data.url ?? '';
+                                command = data.command ?? '';
 
-				if (data.spec_type) spec_type = data.spec_type;
-				if (data.spec) spec = data.spec;
-				if (data.path) path = data.path;
+                                spec_type = data.spec_type ?? 'url';
+                                spec = data.spec ?? '';
+                                path = data.path ?? 'openapi.json';
 
-				if (data.auth_type) auth_type = data.auth_type;
-				if (data.key) key = data.key;
+                                auth_type = data.auth_type ?? 'bearer';
+                                key = data.key ?? '';
 
 				if (data.info) {
 					id = data.info.id ?? '';
@@ -200,14 +219,16 @@
 
 	const exportHandler = async () => {
 		// export current connection as json file
-		const json = JSON.stringify([
-			{
-				type,
-				url,
+                const json = JSON.stringify([
+                        {
+                                type,
+                                transport,
+                                url,
+                                ...(transport === 'command' ? { command } : {}),
 
-				spec_type,
-				spec,
-				path,
+                                spec_type,
+                                spec,
+                                path,
 
 				auth_type,
 				key,
@@ -227,65 +248,77 @@
 		saveAs(blob, `tool-server-${id || name || 'export'}.json`);
 	};
 
-	const submitHandler = async () => {
-		loading = true;
+        const submitHandler = async () => {
+                loading = true;
 
-		// remove trailing slash from url
-		url = url.replace(/\/$/, '');
-		if (id.includes(':') || id.includes('|')) {
-			toast.error($i18n.t('ID cannot contain ":" or "|" characters'));
-			loading = false;
-			return;
-		}
+                // remove trailing slash from url
+                url = url.replace(/\/$/, '');
+                command = command.trim();
 
-		if (type === 'mcp' && auth_type === 'oauth_2.1' && !oauthClientInfo) {
-			toast.error($i18n.t('Please register the OAuth client'));
-			loading = false;
-			return;
-		}
+                if (type === 'mcp' && transport === 'command' && command === '') {
+                        toast.error($i18n.t('Please enter a valid command'));
+                        loading = false;
+                        return;
+                }
 
-		// validate spec
-		if (spec_type === 'json') {
-			try {
-				const specJSON = JSON.parse(spec);
-				spec = JSON.stringify(specJSON, null, 2);
-			} catch (e) {
-				toast.error($i18n.t('Please enter a valid JSON spec'));
-				loading = false;
-				return;
-			}
-		}
+                if (id.includes(':') || id.includes('|')) {
+                        toast.error($i18n.t('ID cannot contain ":" or "|" characters'));
+                        loading = false;
+                        return;
+                }
 
-		const connection = {
-			type,
-			url,
+                if (type === 'mcp' && auth_type === 'oauth_2.1' && !oauthClientInfo) {
+                        toast.error($i18n.t('Please register the OAuth client'));
+                        loading = false;
+                        return;
+                }
 
-			spec_type,
-			spec,
-			path,
+                // validate spec
+                if (spec_type === 'json') {
+                        try {
+                                const specJSON = JSON.parse(spec);
+                                spec = JSON.stringify(specJSON, null, 2);
+                        } catch (e) {
+                                toast.error($i18n.t('Please enter a valid JSON spec'));
+                                loading = false;
+                                return;
+                        }
+                }
 
-			auth_type,
-			key,
-			config: {
-				enable: enable,
-				access_control: accessControl
-			},
-			info: {
-				id: id,
-				name: name,
-				description: description,
-				...(oauthClientInfo ? { oauth_client_info: oauthClientInfo } : {})
-			}
-		};
+                const connection = {
+                        type,
+                        transport,
+                        url: transport === 'http' ? url : '',
+                        ...(transport === 'command' ? { command } : {}),
+
+                        spec_type,
+                        spec,
+                        path,
+
+                        auth_type,
+                        key,
+                        config: {
+                                enable: enable,
+                                access_control: accessControl
+                        },
+                        info: {
+                                id: id,
+                                name: name,
+                                description: description,
+                                ...(oauthClientInfo ? { oauth_client_info: oauthClientInfo } : {})
+                        }
+                };
 
 		await onSubmit(connection);
 
 		loading = false;
 		show = false;
 
-		// reset form
-		type = 'openapi';
-		url = '';
+                // reset form
+                type = 'openapi';
+                transport = 'http';
+                url = '';
+                command = '';
 
 		spec_type = 'url';
 		spec = '';
@@ -303,31 +336,46 @@
 		accessControl = null;
 	};
 
-	const init = () => {
-		if (connection) {
-			type = connection?.type ?? 'openapi';
-			url = connection.url;
+        const init = () => {
+                if (connection) {
+                        type = connection?.type ?? 'openapi';
+                        transport = connection?.transport ?? (connection?.command ? 'command' : 'http');
+                        url = connection?.url ?? '';
+                        command = connection?.command ?? '';
 
-			spec_type = connection?.spec_type ?? 'url';
-			spec = connection?.spec ?? '';
-			path = connection?.path ?? 'openapi.json';
+                        spec_type = connection?.spec_type ?? 'url';
+                        spec = connection?.spec ?? '';
+                        path = connection?.path ?? 'openapi.json';
 
-			auth_type = connection?.auth_type ?? 'bearer';
-			key = connection?.key ?? '';
+                        auth_type = connection?.auth_type ?? 'bearer';
+                        key = connection?.key ?? '';
 
-			id = connection.info?.id ?? '';
-			name = connection.info?.name ?? '';
-			description = connection.info?.description ?? '';
-			oauthClientInfo = connection.info?.oauth_client_info ?? null;
+                        id = connection.info?.id ?? '';
+                        name = connection.info?.name ?? '';
+                        description = connection.info?.description ?? '';
+                        oauthClientInfo = connection.info?.oauth_client_info ?? null;
 
 			enable = connection.config?.enable ?? true;
 			accessControl = connection.config?.access_control ?? null;
 		}
 	};
 
-	$: if (show) {
-		init();
-	}
+        $: if (show) {
+                init();
+        }
+
+        $: if (type !== 'mcp' && transport !== 'http') {
+                transport = 'http';
+        }
+
+        $: if (type === 'mcp' && transport === 'command') {
+                if (auth_type !== 'none') {
+                        auth_type = 'none';
+                }
+                if (key !== '') {
+                        key = '';
+                }
+        }
 
 	onMount(() => {
 		init();
@@ -408,39 +456,89 @@
 										>
 											{#if ['', 'openapi'].includes(type)}
 												{$i18n.t('OpenAPI')}
-											{:else if type === 'mcp'}
-												{$i18n.t('MCP')}
-												<span class="text-gray-500">{$i18n.t('Streamable HTTP')}</span>
-											{/if}
-										</button>
-									</div>
-								</div>
-							</div>
-						{/if}
+                                                                                        {:else if type === 'mcp'}
+                                                                                                {$i18n.t('MCP')}
+                                                                                                <span class="text-gray-500">
+                                                                                                        {#if transport === 'command'}
+                                                                                                                {$i18n.t('Command')}
+                                                                                                        {:else}
+                                                                                                                {$i18n.t('Streamable HTTP')}
+                                                                                                        {/if}
+                                                                                                </span>
+                                                                                        {/if}
+                                                                                </button>
+                                                                        </div>
+                                                                </div>
+                                                        </div>
 
-						<div class="flex gap-2">
-							<div class="flex flex-col w-full">
-								<div class="flex justify-between mb-0.5">
-									<label
-										for="api-base-url"
-										class={`text-xs ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
-										>{$i18n.t('URL')}</label
-									>
-								</div>
+                                                {#if type === 'mcp'}
+                                                        <div class="flex gap-2 mb-1.5">
+                                                                <div class=" text-xs text-gray-500 self-center">{$i18n.t('Connection')}</div>
+                                                                <div class="flex gap-1">
+                                                                        <button
+                                                                                class={`px-2 py-0.5 text-xs rounded-full border transition ${transport === 'http' ? 'bg-gray-200 dark:bg-gray-800 border-transparent text-gray-900 dark:text-gray-100' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
+                                                                                type="button"
+                                                                                on:click={() => {
+                                                                                        transport = 'http';
+                                                                                }}
+                                                                        >
+                                                                                {$i18n.t('Streamable HTTP')}
+                                                                        </button>
+                                                                        <button
+                                                                                class={`px-2 py-0.5 text-xs rounded-full border transition ${transport === 'command' ? 'bg-gray-200 dark:bg-gray-800 border-transparent text-gray-900 dark:text-gray-100' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}`}
+                                                                                type="button"
+                                                                                on:click={() => {
+                                                                                        transport = 'command';
+                                                                                }}
+                                                                        >
+                                                                                {$i18n.t('Command')}
+                                                                        </button>
+                                                                </div>
+                                                        </div>
+                                                {/if}
+                                                {/if}
 
-								<div class="flex flex-1 items-center">
-									<input
-										id="api-base-url"
-										class={`w-full flex-1 text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
-										type="text"
-										bind:value={url}
-										placeholder={$i18n.t('API Base URL')}
-										autocomplete="off"
-										required
-									/>
+                                                <div class="flex gap-2">
+                                                        <div class="flex flex-col w-full">
+                                                                <div class="flex justify-between mb-0.5">
+                                                                        <label
+                                                                                for="api-base-url"
+                                                                                class={`text-xs ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
+                                                                                >
+                                                                                {#if type === 'mcp' && transport === 'command'}
+                                                                                        {$i18n.t('Command')}
+                                                                                {:else}
+                                                                                        {$i18n.t('URL')}
+                                                                                {/if}
+                                                                                </label
+                                                                        >
+                                                                </div>
 
-									<Tooltip
-										content={$i18n.t('Verify Connection')}
+                                                                <div class="flex flex-1 items-center">
+                                                                        {#if type === 'mcp' && transport === 'command'}
+                                                                                <input
+                                                                                        id="mcp-command"
+                                                                                        class={`w-full flex-1 text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+                                                                                        type="text"
+                                                                                        bind:value={command}
+                                                                                        placeholder={$i18n.t('e.g. uvx spotify-mcp')}
+                                                                                        autocomplete="off"
+                                                                                        required
+                                                                                />
+                                                                        {:else}
+                                                                                <input
+                                                                                        id="api-base-url"
+                                                                                        class={`w-full flex-1 text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+                                                                                        type="text"
+                                                                                        bind:value={url}
+                                                                                        placeholder={$i18n.t('API Base URL')}
+                                                                                        autocomplete="off"
+                                                                                        required
+                                                                                />
+                                                                        {/if}
+
+                                                                        <Tooltip
+                                                                                content={$i18n.t('Verify Connection')}
 										className="shrink-0 flex items-center mr-1"
 									>
 										<button
@@ -600,11 +698,12 @@
 
 								<div class="flex gap-2">
 									<div class="flex-shrink-0 self-start">
-										<select
-											id="select-bearer-or-session"
-											class={`w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
-											bind:value={auth_type}
-										>
+                                                                <select
+                                                                                        id="select-bearer-or-session"
+                                                                                        class={`w-full text-sm bg-transparent pr-5 ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
+                                                                                        bind:value={auth_type}
+                                                                                        disabled={type === 'mcp' && transport === 'command'}
+                                                                                >
 											<option value="none">{$i18n.t('None')}</option>
 
 											<option value="bearer">{$i18n.t('Bearer')}</option>

@@ -1241,6 +1241,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         continue
 
                     auth_type = mcp_server_connection.get("auth_type", "")
+                    transport = mcp_server_connection.get("transport", "http").lower()
 
                     headers = {}
                     if auth_type == "bearer":
@@ -1278,10 +1279,19 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                             oauth_token = None
 
                     mcp_clients[server_id] = MCPClient()
-                    await mcp_clients[server_id].connect(
-                        url=mcp_server_connection.get("url", ""),
-                        headers=headers if headers else None,
-                    )
+
+                    connect_kwargs: dict[str, Any] = {
+                        "transport": transport,
+                    }
+
+                    if transport == "http":
+                        connect_kwargs["url"] = mcp_server_connection.get("url", "")
+                        if headers:
+                            connect_kwargs["headers"] = headers
+                    else:
+                        connect_kwargs["command"] = mcp_server_connection.get("command")
+
+                    await mcp_clients[server_id].connect(**connect_kwargs)
 
                     tool_specs = await mcp_clients[server_id].list_tool_specs()
                     for tool_spec in tool_specs:
