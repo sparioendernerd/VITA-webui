@@ -470,8 +470,7 @@
 								<div class="flex w-full justify-between items-center">
 									<div class=" text-xs text-gray-500">{$i18n.t('Type')}</div>
 
-									<div class="">
-
+                                                                        <div class="">
                                                                                 <button
                                                                                         on:click={cycleType}
                                                                                         type="button"
@@ -481,41 +480,15 @@
                                                                                                 {$i18n.t('MCP')}
                                                                                                 <span class="text-gray-500">
                                                                                                         (
-
-										<button
-											on:click={() => {
-                                                                                                if (['', 'openapi'].includes(type)) {
-                                                                                                        type = 'mcp';
-                                                                                                        transport = 'http';
-                                                                                                } else if (transport === 'http') {
-                                                                                                        transport = 'command';
-                                                                                                } else {
-                                                                                                        type = 'openapi';
-                                                                                                        transport = 'http';
-                                                                                                }
-                                                                                        }}
-											type="button"
-											class=" text-xs text-gray-700 dark:text-gray-300"
-										>
-											{#if ['', 'openapi'].includes(type)}
-												{$i18n.t('OpenAPI')}
-                                                                                        {:else if type === 'mcp'}
-                                                                                                {$i18n.t('MCP')}
-                                                                                                <span class="text-gray-500">
-
                                                                                                         {#if transport === 'command'}
                                                                                                                 {$i18n.t('Command')}
                                                                                                         {:else}
                                                                                                                 {$i18n.t('Streamable HTTP')}
                                                                                                         {/if}
-
                                                                                                         )
                                                                                                 </span>
                                                                                         {:else}
                                                                                                 {$i18n.t('OpenAPI')}
-
-                                                                                                </span>
-
                                                                                         {/if}
                                                                                 </button>
                                                                         </div>
@@ -565,8 +538,7 @@
                                                                                 {:else}
                                                                                         {$i18n.t('URL')}
                                                                                 {/if}
-                                                                                </label
-                                                                        >
+                                                                        </label>
                                                                 </div>
 
                                                                 <div class="flex flex-1 items-center">
@@ -655,10 +627,10 @@
 
 										<div class="flex flex-1 items-center">
 											{#if spec_type === 'url'}
-												<div class="flex-1 flex items-center">
-													<label for="url-or-path" class="sr-only"
-														>{$i18n.t('openapi.json URL or Path')}</label
-													>
+                                                                                                <div class="flex-1 flex items-center">
+                                                                                                        <label for="url-or-path" class="sr-only">
+                                                                                                                {$i18n.t('openapi.json URL or Path')}
+                                                                                                        </label>
 													<input
 														class={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
 														type="text"
@@ -818,13 +790,13 @@
 									<label
 										for="enter-id"
 										class={`mb-0.5 text-xs ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
-										>{$i18n.t('ID')}
+                                                                                >{$i18n.t('ID')}
 
-										{#if type !== 'mcp'}
-											<span class="text-xs text-gray-200 dark:text-gray-800 ml-0.5"
-												>{$i18n.t('Optional')}</span
-											>
-										{/if}
+                                                                                {#if type !== 'mcp'}
+                                                                                        <span class="text-xs text-gray-200 dark:text-gray-800 ml-0.5">
+                                                                                                {$i18n.t('Optional')}
+                                                                                        </span>
+                                                                                {/if}
 									</label>
 
 									<div class="flex-1">
@@ -864,11 +836,12 @@
 							</div>
 
 							<div class="flex flex-col w-full mt-2">
-								<label
-									for="description"
-									class={`mb-1 text-xs ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700 text-gray-500'}`}
-									>{$i18n.t('Description')}</label
-								>
+                                                                <label
+                                                                        for="description"
+                                                                        class={`mb-1 text-xs ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100 placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700 text-gray-500'}`}
+                                                                >
+                                                                        {$i18n.t('Description')}
+                                                                </label>
 
 								<div class="flex-1">
 									<input
@@ -903,11 +876,13 @@
 								'MCP support is experimental and its specification changes often, which can lead to incompatibilities. OpenAPI specification support is directly maintained by the Open WebUI team, making it the more reliable option for compatibility.'
 							)}
 
-							<a
-								class="font-medium underline"
-								href="https://docs.openwebui.com/features/mcp"
-								target="_blank">{$i18n.t('Read more →')}</a
-							>
+                                                        <a
+                                                                class="font-medium underline"
+                                                                href="https://docs.openwebui.com/features/mcp"
+                                                                target="_blank"
+                                                        >
+                                                                {$i18n.t('Read more →')}
+                                                        </a>
 						</div>
 					{/if}
 
