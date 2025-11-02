@@ -53,16 +53,16 @@
 					<WrenchAlt />
 				</Tooltip>
 
-				{#if connection?.info?.name}
-					<div class=" capitalize outline-hidden w-full bg-transparent">
-						{connection?.info?.name ?? connection?.url}
-						<span class="text-gray-500">{connection?.info?.id ?? ''}</span>
-					</div>
-				{:else}
-					<div>
-						{connection?.url}
-					</div>
-				{/if}
+                                {#if connection?.info?.name}
+                                        <div class=" capitalize outline-hidden w-full bg-transparent">
+                                                {connection?.info?.name ?? connection?.url ?? connection?.command}
+                                                <span class="text-gray-500">{connection?.info?.id ?? ''}</span>
+                                        </div>
+                                {:else}
+                                        <div>
+                                                {connection?.url ?? connection?.command}
+                                        </div>
+                                {/if}
 			</div>
 		</div>
 	</Tooltip>
